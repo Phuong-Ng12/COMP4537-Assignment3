@@ -22,40 +22,39 @@ function Login({onFormSwitch}) {
 
   return (
     <>
-        {
-            (accessToken && user?.role === "admin") &&
-            <>
-            <h2>Hello {username}</h2>
-            <Dashboard
-                accessToken={accessToken}
-                setAccessToken={setAccessToken}
-                refreshToken={refreshToken}
-            />
-            </>
-        }
-        <div className='auth-form-container'>
-
+        <div className='admin-dashboard'>
             {
-                (!accessToken) && 
+                (accessToken && user?.role === "admin") &&
                 <>
-                    <h2>Login</h2>
-                    <form className='login-form' onSubmit={onClickHandle}>
-                    <label>Username</label>
-                    <input 
-                    type="text" 
-                    placeholder='username' 
-                    onChange={(e) => { setUsername(e.target.value)}}/>
-                    <label>Password</label>
-                    <input 
-                    type="password" 
-                    placeholder='password'
-                    onChange={(e) => { setPassword(e.target.value)}}/>
-                    <button type='submit'>Login</button>
-                    </form>
-                    <button className='link-btn' onClick={()=>onFormSwitch('register')}>Don't have an account? Register here.</button>
+                <h2>Hello {username}</h2>
+                <Dashboard
+                    accessToken={accessToken}
+                    setAccessToken={setAccessToken}
+                    refreshToken={refreshToken}
+                />
                 </>
             }
         </div>
+        {
+            (!accessToken) && 
+            <div className='auth-form-container'>
+                <h2>Login</h2>
+                <form className='login-form' onSubmit={onClickHandle}>
+                <label>Username</label>
+                <input 
+                type="text" 
+                placeholder='username' 
+                onChange={(e) => { setUsername(e.target.value)}}/>
+                <label>Password</label>
+                <input 
+                type="password" 
+                placeholder='password'
+                onChange={(e) => { setPassword(e.target.value)}}/>
+                <button type='submit'>Login</button>
+                </form>
+                <button className='link-btn' onClick={()=>onFormSwitch('register')}>Don't have an account? Register here.</button>
+            </div>
+        }
     </>
   )
 }

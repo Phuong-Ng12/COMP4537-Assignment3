@@ -61,9 +61,6 @@ app.post('/register', asyncWrapper(async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
     const email = req.body.email;
-    console.log(req.body.username)
-    console.log(req.body.password)
-    console.log(req.body.email)
     if (!username || !password || !email) {
       res.status(400).send({errMsg: "Username, password, email cannot be empty"});
       throw new PokemonBadRequest("Username, password, email cannot be empty");
