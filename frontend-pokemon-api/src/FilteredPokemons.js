@@ -3,7 +3,8 @@ import axios from 'axios'
 
 function FilteredPokemons({typeSelectedArray, currentPage, setPokemonsSelected, pokemonsSelected}) {
     const [pokemons, setPokemons] = useState([])
-    const [open,setOpen]=useState(false);
+    const [open, setOpen]=useState(false);
+    const [selectedPokemon, setSelectedPokemon] = useState([])
     
     useEffect(() => {
         async function fetchPokemons(){
@@ -42,17 +43,25 @@ function FilteredPokemons({typeSelectedArray, currentPage, setPokemonsSelected, 
                             ? <img src={`https://raw.githubusercontent.com/fanzeyi/pokemon.json/master/images/0${pokemon.id}.png`} alt={pokemon.name.english}/>
                             : <img src={`https://raw.githubusercontent.com/fanzeyi/pokemon.json/master/images/${pokemon.id}.png`} alt={pokemon.name.english}/>
                         }
-                        <p><button id="pokemon-detail-btn" onClick={()=>{setOpen(true)}}>Show Detail</button></p>
-                        
+                        <p><button id="pokemon-detail-btn" onClick={()=> {setOpen(true); setSelectedPokemon(pokemon)}}>Show Detail</button></p>
                         {
                             (open) ? <div id="myModal" className="modal" style={{display: "block"}}>
                             <div className="modal-content">
-                                <span className="close" onClick={() => setOpen(false)}>&times;</span>
-                                <p>Some text in the Modal..</p>
+                                <span className="close" onClick={() => {setOpen(false)}}>&times;</span>
+                                    <ul id="pokemon-see-detail-modal">
+                                        <li><h1 id="pokemon-heading-see-detail-modal">{selectedPokemon.name.english}</h1></li>
+                                        <li>HP: {selectedPokemon.base.HP}</li>
+                                        <li>Attack: {selectedPokemon.base.Attack}</li>
+                                        <li>Defense: {selectedPokemon.base.Defense}</li>
+                                        <li>Speed: {selectedPokemon.base.Speed}</li>
+                                        <li>Speed Attack: {selectedPokemon.base['Sp. Attack']}</li>
+                                        <li>Speed Defense: {selectedPokemon.base['Sp. Defense']}</li>
+                                        <li>Type: {selectedPokemon.type.map(item => <>{item} | </>)}</li>
+                                        <li>ID: {selectedPokemon.id}</li>
+                                    </ul> 
                                 </div>
                             </div>  
-                            : <div id="myModal" className="modal" style={{display: "none"}}>
-                            </div>
+                            : <div id="myModal" className="modal" style={{display: "none"}}></div>
                         }
                         
                     </div>
