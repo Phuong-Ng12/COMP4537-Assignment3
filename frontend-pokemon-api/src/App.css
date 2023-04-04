@@ -85,3 +85,24 @@ button {
 #topnav #logout {
     float: right;
 }
+
+#pokemon-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#pokemon-list img {
+    height: 100px;
+    width: 100px;
+}
+
+.btnActive{
+    color: white;
+    background-color: #4CAF50;
+}
+
+#search-pokemons{
+    display: flex;
+    flex-direction: row;
+}
