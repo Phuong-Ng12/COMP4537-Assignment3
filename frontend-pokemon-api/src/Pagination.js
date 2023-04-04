@@ -29,18 +29,15 @@ function Pagination({pokemonsSelected, currentPage, setCurrentPage}) {
                         <button 
                             key={page}
                             onClick={() => setCurrentPage((currentPage !== 81) 
-                                ? (currentPage%10 === 0) ? page + 1 + 10*Math.floor(currentPage/11) : page + 1 + 10*Math.floor(currentPage/10)
-                                : 81)}
+                                ? (currentPage%10 === 0) ? page + 1 + 10*Math.floor(currentPage/11) : page + 1 + 10*Math.floor(currentPage/10): 81)}
                             className={
                                 ((currentPage !== 81) 
-                                ? (currentPage%10 === 0) ? page + 1 + 10*Math.floor(currentPage/11) : page + 1 + 10*Math.floor(currentPage/10)
-                                : 81) 
+                                ? (currentPage%10 === 0) ? page + 1 + 10*Math.floor(currentPage/11) : page + 1 + 10*Math.floor(currentPage/10): 81) 
                                 === currentPage ? "btnActive" : ""}
                         >
                             {
                                 (currentPage !== 81) 
-                                ? (currentPage%10 === 0) ? page + 1 + 10*Math.floor(currentPage/11) : page + 1 + 10*Math.floor(currentPage/10)
-                                : 81
+                                ? (currentPage%10 === 0) ? page + 1 + 10*Math.floor(currentPage/11) : page + 1 + 10*Math.floor(currentPage/10): 81
                             }
                         </button>
                         : (page === 0) ?

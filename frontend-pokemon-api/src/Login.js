@@ -42,8 +42,6 @@ function Login({onFormSwitch}) {
                     typeSelectedArray={typeSelectedArray}
                     setTypeSelectedArray={setTypeSelectedArray}
                     />
-                    { 
-                    <>
                     <FilteredPokemons
                     typeSelectedArray={typeSelectedArray}
                     currentPage={currentPage}
@@ -56,8 +54,6 @@ function Login({onFormSwitch}) {
                     setCurrentPage={setCurrentPage}
                     pokemonsSelected={pokemonsSelected}
                     />
-                    </>
-                    }
                 </>
         }
 

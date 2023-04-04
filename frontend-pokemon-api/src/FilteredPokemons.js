@@ -3,6 +3,7 @@ import axios from 'axios'
 
 function FilteredPokemons({typeSelectedArray, currentPage, setPokemonsSelected, pokemonsSelected}) {
     const [pokemons, setPokemons] = useState([])
+    const [open,setOpen]=useState(false);
     
     useEffect(() => {
         async function fetchPokemons(){
@@ -27,7 +28,6 @@ function FilteredPokemons({typeSelectedArray, currentPage, setPokemonsSelected, 
     const endIndex = startIndex + pageSize;
     currentPokemons = pokeArr.slice(startIndex, endIndex);
 
-
   return (
     <>
         <h2>Page number {currentPage}</h2>
@@ -42,6 +42,19 @@ function FilteredPokemons({typeSelectedArray, currentPage, setPokemonsSelected, 
                             ? <img src={`https://raw.githubusercontent.com/fanzeyi/pokemon.json/master/images/0${pokemon.id}.png`} alt={pokemon.name.english}/>
                             : <img src={`https://raw.githubusercontent.com/fanzeyi/pokemon.json/master/images/${pokemon.id}.png`} alt={pokemon.name.english}/>
                         }
+                        <p><button id="pokemon-detail-btn" onClick={()=>{setOpen(true)}}>Show Detail</button></p>
+                        
+                        {
+                            (open) ? <div id="myModal" className="modal" style={{display: "block"}}>
+                            <div className="modal-content">
+                                <span className="close" onClick={() => setOpen(false)}>&times;</span>
+                                <p>Some text in the Modal..</p>
+                                </div>
+                            </div>  
+                            : <div id="myModal" className="modal" style={{display: "none"}}>
+                            </div>
+                        }
+                        
                     </div>
                 ))
             }
