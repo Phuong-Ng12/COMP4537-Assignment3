@@ -19,15 +19,17 @@ function Register({onFormSwitch}) {
     }
 
   return (
-    <>
+    <div className="App">
     {
         (user) ?
-        <div className='register-success'>
+        <div className='auth-form-outer-container'>
             <h2>{username} Have Registered Successfully!</h2>
             <button onClick={()=>onFormSwitch('login')}>Click here to login.</button>
         </div>
     
-        : <div className='auth-form-container'>
+        : 
+        <div className='auth-form-outer-container'>
+        <div className='auth-form-container'>
             <h2>Register</h2>
             {
                 <form className='register-form' onSubmit={onClickHandle}>
@@ -51,8 +53,9 @@ function Register({onFormSwitch}) {
             }
             <button className='link-btn' onClick={()=>onFormSwitch('login')}>Already have an account? Login here.</button>
         </div>
+        </div>
     }
-    </>
+    </div>
   )
 }
 

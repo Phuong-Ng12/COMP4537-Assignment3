@@ -11,6 +11,7 @@ const userModel = require("./userModel.js")
 const morgan = require("morgan")
 const cors = require("cors")
 const bodyParser = require('body-parser')
+const jwt_decode = require('jwt-decode');
 
 
 const {
@@ -119,12 +120,13 @@ app.post('/login', asyncWrapper(async (req, res) => {
 
 
 app.get('/logout', asyncWrapper(async (req, res) => {
-
-  const user = await userModel.findOne({ token: req.query.appid })
+  var decoded = jwt_decode(req.header('auth-token-access'))
+  var username = decoded.user.username;
+  const user = await userModel.findOne({ username })
   if (!user) {
     throw new PokemonAuthError("User not found")
   }
-  await userModel.updateOne({ token: user.token }, { token_invalid: true })
+  res.header('auth-token-access', "")
   res.send("Logged out")
 }))
 
