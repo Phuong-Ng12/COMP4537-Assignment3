@@ -42,7 +42,7 @@ function Login({onFormSwitch}) {
                     typeSelectedArray={typeSelectedArray}
                     setTypeSelectedArray={setTypeSelectedArray}
                     />
-                    {(typeSelectedArray.length !== 0) && 
+                    { 
                     <>
                     <FilteredPokemons
                     typeSelectedArray={typeSelectedArray}

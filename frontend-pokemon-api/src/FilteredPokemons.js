@@ -26,8 +26,6 @@ function FilteredPokemons({typeSelectedArray, currentPage, setPokemonsSelected, 
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     currentPokemons = pokeArr.slice(startIndex, endIndex);
-    console.log(pokeArr)
-    console.log(currentPokemons)
 
 
   return (
