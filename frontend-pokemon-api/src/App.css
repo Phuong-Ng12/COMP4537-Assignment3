@@ -147,3 +147,30 @@ button {
     list-style-type: none;
     text-align: left;
 }
+
+table td {
+    border: 1px solid orange;
+    padding: 8px;
+}
+  
+table {
+    border-collapse: collapse;
+    margin: 16px;
+}
+
+.rowNumbers {
+    counter-reset: step;
+    position: relative;
+}
+
+.rowNumbers td:first-child:before {
+    counter-increment: step;
+    content: counter(step, decimal);
+    color: blue;
+    position: absolute;
+    left: -16px;
+}
+
+#report-links {
+    list-style-type: none;
+}

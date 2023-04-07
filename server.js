@@ -65,11 +65,19 @@ const format = morganjson({
   status: ':status'
 });
 
+function skipOptions(req, res) {
+  return req.method === 'OPTIONS';
+}
+
 const Logger = require('./models/logger.js')
 
-app.use(morgan(format))
+app.use(morgan(format , { skip: skipOptions }))
 
 app.use( async (req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    // Skip logging for OPTIONS requests
+    return next();
+  }
   const { method, url } = req;
   const start = new Date();
 
@@ -303,9 +311,9 @@ app.get('/report', async (req, res) => {
   console.log("Report requested");
   var Errors4xxByEnpointTable = await Logger.aggregate([
     {$match: {status: { $gte: 400, $lt: 500}}},
-    {$group: {_id: {'url': '$url', 'method': '$method'},count: { $sum: 1 }}}
+    {$group: {_id: {'url': '$url', 'method': '$method', 'status': '$status'},count: { $sum: 1 }}}
   ])
-  // console.log(Errors4xxByEnpointTable)
+  console.log(Errors4xxByEnpointTable)
 
   var RecentErrorsTable = await Logger.find({
     status: { $gte: 400},
@@ -335,9 +343,11 @@ app.get('/report', async (req, res) => {
   }).project({
     'tpUsers.username': 1,
     'tpUsers.email': 1,
+    'tpUsers.role': 1,
     'topUsers.count': 1
   })
   //console.log("=========\n" + JSON.stringify(TopUsersByEndpointTable) + "\n===========\n")
+  // console.log(TopUsersByEndpointTable)
 
   //Top API users over period of time:
   var TopAPIUsersOverPeriodOfTime = await Logger.aggregate([
@@ -374,14 +384,18 @@ app.get('/report', async (req, res) => {
     },
     {
       $project: {
-        name: '$user.name',
+        name: '$user.username',
         email: '$user.email',
         url: '$_id.url',
+        role: '$user.role',
+        date: '$user.date',
         count: 1,
       },
     },
   ])
-  //console.log("=========\n" + JSON.stringify(TopAPIUsersOverPeriodOfTime) + "\n=======\n")
+  // console.log("=========\n" + JSON.stringify(TopAPIUsersOverPeriodOfTime) + "\n=======\n")
+  // console.log(TopAPIUsersOverPeriodOfTime)
+
   
   //Unique API users over a period of time
   var UniqueAPIUsersOverPeriodOfTime = await Logger.aggregate([
@@ -411,30 +425,29 @@ app.get('/report', async (req, res) => {
     },
     {
       $project: {
-        name: '$user.name',
+        name: '$user.username',
         email: '$user.email',
+        role: '$user.role',
+        date: '$user.date'
       },
     },
   ])
-  //console.log("=======\n" + JSON.stringify(UniqueAPIUsersOverPeriodOfTime) + "\n=======" )
-  // switch(req.query.id) {
-  //   case 1: 
-  //   res.send("1: " + JSON.stringify(UniqueAPIUsersOverPeriodOfTime))
-  //   case 2: 
-  //   res.send("2: " + JSON.stringify(TopAPIUsersOverPeriodOfTime))
-  //   case 3: 
-  //   res.send("3: " + JSON.stringify(TopUsersByEndpointTable))
-  //   case 4: 
-  //   res.send("4: " + JSON.stringify(RecentErrorsTable))
-  //   case 5: 
-  //   res.send("5: " + JSON.stringify(Errors4xxByEnpointTable))
-  //   // default:
-  //   // res.send(`Table ${req.query.id}`)
-  // }
-  console.log(req.query.id)
-  console.log(typeof(req.query.id))
+  // console.log("=========\n" + JSON.stringify(UniqueAPIUsersOverPeriodOfTime) + "\n=======\n")
+  // console.log(UniqueAPIUsersOverPeriodOfTime)
 
-  res.send(`Table ${req.query.id}`+ JSON.stringify(UniqueAPIUsersOverPeriodOfTime))
+  if(req.query.id === "1"){
+    res.send(UniqueAPIUsersOverPeriodOfTime)
+  } else if(req.query.id === "2"){
+    res.send(TopAPIUsersOverPeriodOfTime)
+  } else if(req.query.id === "3"){
+    res.send(TopUsersByEndpointTable)
+  } else if(req.query.id === "4"){
+    res.send(Errors4xxByEnpointTable)
+  } else if(req.query.id === "5"){
+    res.send(RecentErrorsTable)
+  }
+
+  //res.send(`Table ${req.query.id}`+ JSON.stringify(UniqueAPIUsersOverPeriodOfTime))
 })
 
 
