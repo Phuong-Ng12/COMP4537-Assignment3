@@ -12,7 +12,15 @@ const morgan = require("morgan")
 const cors = require("cors")
 const bodyParser = require('body-parser')
 const jwt_decode = require('jwt-decode');
+// const requestLog = require('./logger.js');
 
+// const winston = require('winston');
+// require('winston-mongodb');
+// var mongoMorgan = require('mongo-morgan')
+// const morganMongoMiddleware = require('morgan-mongo');
+// var mongooseMorgan = require('mongoose-morgan');
+
+var userId = new mongoose.Types.ObjectId(1)
 
 const {
   PokemonBadRequest,
@@ -49,8 +57,46 @@ start()
 app.use(express.json())
 app.use(bodyParser.urlencoded({ extended: true }));
 const jwt = require("jsonwebtoken")
+const morganjson = require('morgan-json');
+const format = morganjson({
+  date: '[:date[clf]]',
+  method: ':method',
+  url: ':url',
+  status: ':status'
+});
 
-app.use(morgan(":method"))
+const Logger = require('./models/logger.js')
+
+app.use(morgan(format))
+
+app.use( async (req, res, next) => {
+  const { method, url } = req;
+  const start = new Date();
+
+  res.on('finish', async () => {
+    const { statusCode } = res;
+    const end = new Date();
+    const responseTime = end - start;
+
+    const logger = new Logger({
+      userId,
+      method,
+      url,
+      status: statusCode,
+      responseTime,
+    });
+
+    logger.save()
+      .then(() => {
+        console.log('Request log saved to MongoDB');
+      })
+      .catch((err) => {
+        console.log('Error saving request log to MongoDB:', err);
+      });
+  });
+
+  next();
+});
 
 app.use(cors())
 app.use(cors({
@@ -99,6 +145,7 @@ app.post('/requestNewAccessToken', asyncWrapper(async (req, res) => {
 app.post('/login', asyncWrapper(async (req, res) => {
   const { username, password } = req.body
   const user = await userModel.findOne({ username })
+  userId = await userModel.findOne({ "username": req.body.username }).select('_id')
   if (!user)
     throw new PokemonAuthError("User not found")
 
@@ -252,9 +299,142 @@ app.patch('/api/v1/pokemon/:id', asyncWrapper(async (req, res) => {
 
 
 
-app.get('/report', (req, res) => {
+app.get('/report', async (req, res) => {
   console.log("Report requested");
-  res.send(`Table ${req.query.id}`)
+  var Errors4xxByEnpointTable = await Logger.aggregate([
+    {$match: {status: { $gte: 400, $lt: 500}}},
+    {$group: {_id: {'url': '$url', 'method': '$method'},count: { $sum: 1 }}}
+  ])
+  // console.log(Errors4xxByEnpointTable)
+
+  var RecentErrorsTable = await Logger.find({
+    status: { $gte: 400},
+    date: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000)}
+  }).sort({ date: -1});
+  // console.log(RecentErrorsTable)
+
+  var TopUsersByEndpointTable = await Logger.aggregate([
+    {
+      $group: {
+        _id: { url: '$url', userId: '$userId'},
+        count: { $sum: 1}
+      }
+    },
+    { $sort: {'_id.url': 1, count: -1}},
+    {
+      $group: {
+        _id: '$_id.url',
+        topUsers: { $push: { userId: '$_id.userId', count: '$count'}}
+      }
+    }
+  ]).lookup({
+    from: 'pokeusers',
+    localField: 'topUsers.userId',
+    foreignField: '_id',
+    as: 'tpUsers',
+  }).project({
+    'tpUsers.username': 1,
+    'tpUsers.email': 1,
+    'topUsers.count': 1
+  })
+  //console.log("=========\n" + JSON.stringify(TopUsersByEndpointTable) + "\n===========\n")
+
+  //Top API users over period of time:
+  var TopAPIUsersOverPeriodOfTime = await Logger.aggregate([
+    {
+      $match: {
+        date: {
+          $gte: new Date('2023-01-01'),
+          $lt: new Date('2023-12-31')
+        }
+      }
+    },
+    {
+      $group: {
+        _id: { userId: '$userId', url: '$url'},
+        count: { $sum: 1}
+      }
+    },
+    {
+      $lookup: {
+        from: 'pokeusers',
+        localField: 'userId',
+        foreignField: 'userId',
+        as: 'user',
+      },
+    },
+    {
+      $unwind: '$user',
+    },
+    {
+      $sort: { count: -1 },
+    },
+    {
+      $limit: 10,
+    },
+    {
+      $project: {
+        name: '$user.name',
+        email: '$user.email',
+        url: '$_id.url',
+        count: 1,
+      },
+    },
+  ])
+  //console.log("=========\n" + JSON.stringify(TopAPIUsersOverPeriodOfTime) + "\n=======\n")
+  
+  //Unique API users over a period of time
+  var UniqueAPIUsersOverPeriodOfTime = await Logger.aggregate([
+    {
+      $match: {
+        date: {
+          $gte: new Date('2023-01-01'),
+          $lt: new Date('2023-12-31')
+        }
+      }
+    },
+    {
+      $group: {
+        _id: '$userId',
+      }
+    },
+    {
+      $lookup: {
+        from: 'pokeusers',
+        localField: 'userId',
+        foreignField: 'userId',
+        as: 'user',
+      },
+    },
+    {
+      $unwind: '$user',
+    },
+    {
+      $project: {
+        name: '$user.name',
+        email: '$user.email',
+      },
+    },
+  ])
+  //console.log("=======\n" + JSON.stringify(UniqueAPIUsersOverPeriodOfTime) + "\n=======" )
+  // switch(req.query.id) {
+  //   case 1: 
+  //   res.send("1: " + JSON.stringify(UniqueAPIUsersOverPeriodOfTime))
+  //   case 2: 
+  //   res.send("2: " + JSON.stringify(TopAPIUsersOverPeriodOfTime))
+  //   case 3: 
+  //   res.send("3: " + JSON.stringify(TopUsersByEndpointTable))
+  //   case 4: 
+  //   res.send("4: " + JSON.stringify(RecentErrorsTable))
+  //   case 5: 
+  //   res.send("5: " + JSON.stringify(Errors4xxByEnpointTable))
+  //   // default:
+  //   // res.send(`Table ${req.query.id}`)
+  // }
+  console.log(req.query.id)
+  console.log(typeof(req.query.id))
+
+  res.send(`Table ${req.query.id}`+ JSON.stringify(UniqueAPIUsersOverPeriodOfTime))
 })
 
 

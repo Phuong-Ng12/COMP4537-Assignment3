@@ -36,7 +36,8 @@ function Report({id, accessToken, setAccessToken, refreshToken }) {
                     }
                 }
                 )
-            setReportTable(res.data)
+                console.log(res)
+            // setReportTable(res.data)
         }
         fetchReport()
     }, [id])
@@ -44,8 +45,8 @@ function Report({id, accessToken, setAccessToken, refreshToken }) {
   return (
     <div>Report {id}
     {
-        (reportTable) &&
-        reportTable
+        // (reportTable) &&
+        // <div>{reportTable}</div>
     }
     </div>
   )
