@@ -432,7 +432,7 @@ app.get('/report', async (req, res) => {
       const count = report.topUsers[0].count;
       const { username, email, role } = report.tpUsers[0];
       return {
-        _id: report._id,
+        _idReport: report._id,
         count,
         username,
         email,
@@ -444,21 +444,36 @@ app.get('/report', async (req, res) => {
     const jsonString = JSON.stringify(outputTopUsersByEndpointTable);
 
     // console.log("000000000000\n"+ jsonString + "\n00000000000000\n");
+    // console.log(outputTopUsersByEndpointTable)
     res.send(outputTopUsersByEndpointTable)
   } else if(req.query.id === "4"){
     var Errors4xxByEnpointTable = await Logger.aggregate([
-      {$match: {status: { $gte: 400, $lt: 500}}},
+      {$match: {status: { $gte: 200, $lt: 500}}},
       {$group: {_id: {'url': '$url', 'method': '$method', 'status': '$status'},count: { $sum: 1 }}}
     ])
-    // console.log(Errors4xxByEnpointTable)
-    res.send(Errors4xxByEnpointTable)
+    const outputErrors4xxByEnpointTable = Errors4xxByEnpointTable.map(({ _id, count }) => ({
+      _idErrors4xx: _id.url,
+      method: _id.method,
+      status: _id.status,
+      countEndpoint: count
+    }));
+    // console.log(outputErrors4xxByEnpointTable)
+    res.send(outputErrors4xxByEnpointTable)
   } else if(req.query.id === "5"){
     var RecentErrorsTable = await Logger.find({
-      status: { $gte: 400},
+      status: { $gte: 200},
       date: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000)}
     }).sort({ date: -1});
-    // console.log(RecentErrorsTable)
-    res.send(RecentErrorsTable)
+    const outputRecentErrorsTable = RecentErrorsTable.map(({ method, url, status, responseTime, date}) => ({
+      _idRecentErrors: url,
+      method,
+      status,
+      responseTime,
+      date
+    }));
+
+    //console.log(outputRecentErrorsTable);
+    res.send(outputRecentErrorsTable)
   }
 
   //res.send(`Table ${req.query.id}`+ JSON.stringify(UniqueAPIUsersOverPeriodOfTime))
