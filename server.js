@@ -309,141 +309,155 @@ app.patch('/api/v1/pokemon/:id', asyncWrapper(async (req, res) => {
 
 app.get('/report', async (req, res) => {
   console.log("Report requested");
-  var Errors4xxByEnpointTable = await Logger.aggregate([
-    {$match: {status: { $gte: 400, $lt: 500}}},
-    {$group: {_id: {'url': '$url', 'method': '$method', 'status': '$status'},count: { $sum: 1 }}}
-  ])
-  console.log(Errors4xxByEnpointTable)
-
-  var RecentErrorsTable = await Logger.find({
-    status: { $gte: 400},
-    date: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000)}
-  }).sort({ date: -1});
-  // console.log(RecentErrorsTable)
-
-  var TopUsersByEndpointTable = await Logger.aggregate([
-    {
-      $group: {
-        _id: { url: '$url', userId: '$userId'},
-        count: { $sum: 1}
-      }
-    },
-    { $sort: {'_id.url': 1, count: -1}},
-    {
-      $group: {
-        _id: '$_id.url',
-        topUsers: { $push: { userId: '$_id.userId', count: '$count'}}
-      }
-    }
-  ]).lookup({
-    from: 'pokeusers',
-    localField: 'topUsers.userId',
-    foreignField: '_id',
-    as: 'tpUsers',
-  }).project({
-    'tpUsers.username': 1,
-    'tpUsers.email': 1,
-    'tpUsers.role': 1,
-    'topUsers.count': 1
-  })
-  //console.log("=========\n" + JSON.stringify(TopUsersByEndpointTable) + "\n===========\n")
-  // console.log(TopUsersByEndpointTable)
-
-  //Top API users over period of time:
-  var TopAPIUsersOverPeriodOfTime = await Logger.aggregate([
-    {
-      $match: {
-        date: {
-          $gte: new Date('2023-01-01'),
-          $lt: new Date('2023-12-31')
-        }
-      }
-    },
-    {
-      $group: {
-        _id: { userId: '$userId', url: '$url'},
-        count: { $sum: 1}
-      }
-    },
-    {
-      $lookup: {
-        from: 'pokeusers',
-        localField: 'userId',
-        foreignField: 'userId',
-        as: 'user',
-      },
-    },
-    {
-      $unwind: '$user',
-    },
-    {
-      $sort: { count: -1 },
-    },
-    {
-      $limit: 10,
-    },
-    {
-      $project: {
-        name: '$user.username',
-        email: '$user.email',
-        url: '$_id.url',
-        role: '$user.role',
-        date: '$user.date',
-        count: 1,
-      },
-    },
-  ])
-  // console.log("=========\n" + JSON.stringify(TopAPIUsersOverPeriodOfTime) + "\n=======\n")
-  // console.log(TopAPIUsersOverPeriodOfTime)
-
-  
-  //Unique API users over a period of time
-  var UniqueAPIUsersOverPeriodOfTime = await Logger.aggregate([
-    {
-      $match: {
-        date: {
-          $gte: new Date('2023-01-01'),
-          $lt: new Date('2023-12-31')
-        }
-      }
-    },
-    {
-      $group: {
-        _id: '$userId',
-      }
-    },
-    {
-      $lookup: {
-        from: 'pokeusers',
-        localField: 'userId',
-        foreignField: 'userId',
-        as: 'user',
-      },
-    },
-    {
-      $unwind: '$user',
-    },
-    {
-      $project: {
-        name: '$user.username',
-        email: '$user.email',
-        role: '$user.role',
-        date: '$user.date'
-      },
-    },
-  ])
-  // console.log("=========\n" + JSON.stringify(UniqueAPIUsersOverPeriodOfTime) + "\n=======\n")
-  // console.log(UniqueAPIUsersOverPeriodOfTime)
 
   if(req.query.id === "1"){
+    //Unique API users over a period of time
+    var UniqueAPIUsersOverPeriodOfTime = await Logger.aggregate([
+      {
+        $match: {
+          date: {
+            $gte: new Date('2023-01-01'),
+            $lt: new Date('2023-12-31')
+          }
+        }
+      },
+      {
+        $group: {
+          _id: '$userId',
+        }
+      },
+      {
+        $lookup: {
+          from: 'pokeusers',
+          localField: 'userId',
+          foreignField: 'userId',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: '$user',
+      },
+      {
+        $project: {
+          name: '$user.username',
+          email: '$user.email',
+          role: '$user.role',
+          date: '$user.date'
+        },
+      },
+    ])
+    // console.log("=========\n" + JSON.stringify(UniqueAPIUsersOverPeriodOfTime) + "\n=======\n")
+    // console.log(UniqueAPIUsersOverPeriodOfTime)
     res.send(UniqueAPIUsersOverPeriodOfTime)
   } else if(req.query.id === "2"){
+    //Top API users over period of time:
+    var TopAPIUsersOverPeriodOfTime = await Logger.aggregate([
+      {
+        $match: {
+          date: {
+            $gte: new Date('2023-01-01'),
+            $lt: new Date('2023-12-31')
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { userId: '$userId', url: '$url'},
+          count: { $sum: 1}
+        }
+      },
+      {
+        $lookup: {
+          from: 'pokeusers',
+          localField: 'userId',
+          foreignField: 'userId',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: '$user',
+      },
+      {
+        $sort: { count: -1 },
+      },
+      {
+        $limit: 10,
+      },
+      {
+        $project: {
+          name: '$user.username',
+          email: '$user.email',
+          url: '$_id.url',
+          role: '$user.role',
+          date: '$user.date',
+          count: 1,
+        },
+      },
+    ])
+    // console.log("=========\n" + JSON.stringify(TopAPIUsersOverPeriodOfTime) + "\n=======\n")
+    // console.log(TopAPIUsersOverPeriodOfTime)
     res.send(TopAPIUsersOverPeriodOfTime)
   } else if(req.query.id === "3"){
-    res.send(TopUsersByEndpointTable)
+    var TopUsersByEndpointTable = await Logger.aggregate([
+      {
+        $group: {
+          _id: { url: '$url', userId: '$userId'},
+          count: { $sum: 1}
+        }
+      },
+      { $sort: {'_id.url': 1, count: -1}},
+      {
+        $group: {
+          _id: '$_id.url',
+          topUsers: { $push: { userId: '$_id.userId', count: '$count'}}
+        }
+      }
+    ]).lookup({
+      from: 'pokeusers',
+      localField: 'topUsers.userId',
+      foreignField: '_id',
+      as: 'tpUsers',
+    }).project({
+      'tpUsers.username': 1,
+      'tpUsers.email': 1,
+      'tpUsers.role': 1,
+      'topUsers.count': 1
+    })
+    // console.log("=========\n" + JSON.stringify(TopUsersByEndpointTable) + "\n===========\n")
+
+    const parsedInput = JSON.parse(JSON.stringify(TopUsersByEndpointTable));
+
+    // Extract the necessary data and convert to the desired format
+    const outputTopUsersByEndpointTable = parsedInput.map(report => {
+      const count = report.topUsers[0].count;
+      const { username, email, role } = report.tpUsers[0];
+      return {
+        _id: report._id,
+        count,
+        username,
+        email,
+        role
+      };
+    });
+
+    // // Convert the output to JSON string
+    const jsonString = JSON.stringify(outputTopUsersByEndpointTable);
+
+    console.log("000000000000\n"+ jsonString + "\n00000000000000\n");
+    res.send(outputTopUsersByEndpointTable)
   } else if(req.query.id === "4"){
+    var Errors4xxByEnpointTable = await Logger.aggregate([
+      {$match: {status: { $gte: 400, $lt: 500}}},
+      {$group: {_id: {'url': '$url', 'method': '$method', 'status': '$status'},count: { $sum: 1 }}}
+    ])
+    // console.log(Errors4xxByEnpointTable)
     res.send(Errors4xxByEnpointTable)
   } else if(req.query.id === "5"){
+    var RecentErrorsTable = await Logger.find({
+      status: { $gte: 400},
+      date: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000)}
+    }).sort({ date: -1});
+    // console.log(RecentErrorsTable)
     res.send(RecentErrorsTable)
   }
 
