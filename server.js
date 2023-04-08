@@ -93,7 +93,7 @@ app.use( async (req, res, next) => {
       status: statusCode,
       responseTime,
     });
-
+    
     logger.save()
       .then(() => {
         console.log('Request log saved to MongoDB');
@@ -342,7 +342,7 @@ app.get('/report', async (req, res) => {
           name: '$user.username',
           email: '$user.email',
           role: '$user.role',
-          date: '$user.date'
+          date: '$user.date',
         },
       },
     ])
@@ -443,7 +443,7 @@ app.get('/report', async (req, res) => {
     // // Convert the output to JSON string
     const jsonString = JSON.stringify(outputTopUsersByEndpointTable);
 
-    console.log("000000000000\n"+ jsonString + "\n00000000000000\n");
+    // console.log("000000000000\n"+ jsonString + "\n00000000000000\n");
     res.send(outputTopUsersByEndpointTable)
   } else if(req.query.id === "4"){
     var Errors4xxByEnpointTable = await Logger.aggregate([

@@ -46,7 +46,7 @@ function FilteredPokemons({typeSelectedArray, currentPage, setPokemonsSelected, 
                         <p><button id="pokemon-detail-btn" onClick={()=> {setOpen(true); setSelectedPokemon(pokemon)}}>Show Detail</button></p>
                         {
                             (open) ? <div id="myModal" className="modal" style={{display: "block"}}>
-                            <div className="modal-content">
+                            <div key={pokemon.id} className="modal-content">
                                 <span className="close" onClick={() => {setOpen(false)}}>&times;</span>
                                     <ul id="pokemon-see-detail-modal">
                                         <li><h1 id="pokemon-heading-see-detail-modal">{selectedPokemon.name.english}</h1></li>
