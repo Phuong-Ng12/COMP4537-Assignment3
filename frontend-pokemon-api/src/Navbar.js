@@ -9,6 +9,8 @@ import {
   } from "react-router-dom";
 
 function Navbar({ accessToken, setAccessToken, refreshToken, setRefreshToken, setUser, setUsername, setPassword }) {
+  setAccessToken(localStorage.getItem("accessToken"))
+  setRefreshToken(localStorage.getItem("refreshToken"))
   return (
     <div id="topnav">
         <ul>

@@ -108,7 +108,6 @@ app.use(cors({
 
 const bcrypt = require("bcrypt")
 app.post('/register', asyncWrapper(async (req, res) => {
-    // userId = null;
     const username = req.body.username;
     const password = req.body.password;
     const email = req.body.email;
@@ -158,7 +157,6 @@ app.post('/login', asyncWrapper(async (req, res) => {
   const user = await userModel.findOne({ username })
   
   if (!user) {
-    // res.send("User not found. Please register.")
     throw new PokemonAuthError("User not found")
   }
 
@@ -178,7 +176,12 @@ app.post('/login', asyncWrapper(async (req, res) => {
   // res.send("All good!")
   res.send(user)
 }))
-
+app.use((err, req, res, next) => {
+  if (err instanceof PokemonAuthError) {
+    return res.status(401).json({ error: err.message })
+  }
+  return res.status(500).json({ error: 'Internal server error' })
+})
 
 app.get('/logout', asyncWrapper(async (req, res) => {
   // userId = await userModel.findOne({ "username": username }).select('_id')
@@ -482,22 +485,6 @@ app.get('/report', async (req, res) => {
       'tpUsers.role': 1,
       'topUsers.count': 1
     })
-    // console.log("=========\n" + JSON.stringify(TopUsersByEndpointTable) + "\n===========\n")
-
-    // const parsedInput = JSON.parse(JSON.stringify(TopUsersByEndpointTable));
-
-    // // Extract the necessary data and convert to the desired format
-    // const outputTopUsersByEndpointTable = parsedInput.map(report => {
-    //   const count = report.topUsers[0].count;
-    //   const { username, email, role } = report.tpUsers[0];
-    //   return {
-    //     _idReport: report._id,
-    //     count,
-    //     username,
-    //     email,
-    //     role
-    //   };
-    // });
 
     const outputTopUsersByEndpointTable = TopUsersByEndpointTable.map((data) => {
       return {

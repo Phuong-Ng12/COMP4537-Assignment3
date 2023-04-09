@@ -7,7 +7,9 @@ import {
     Link
   } from "react-router-dom";
 
-function Dashboard({ accessToken, setAccessToken, refreshToken }) {
+function Dashboard({ accessToken, setAccessToken, refreshToken, setRefreshToken }) {
+  setAccessToken(localStorage.getItem("accessToken"))
+  setRefreshToken(localStorage.getItem("refreshToken"))
   return (
     <div>
         <h1>

@@ -21,13 +21,13 @@ function Logout({ accessToken, setAccessToken, setRefreshToken, setUser, setUser
             setUser('')
             setUsername('')
             setPassword('')
+            localStorage.removeItem("accessToken")
+            localStorage.removeItem("refreshToken")
+            localStorage.removeItem("userRole")
+            localStorage.removeItem("username")
         }
         fetchLogout()
     }, [accessToken, setAccessToken, setRefreshToken, setUser, setUsername, setPassword])
-
-    // useEffect(() => {
-    //     console.log(accessToken)
-    // }, [accessToken, setAccessToken])
   return (
     <div>Logout</div>
   )

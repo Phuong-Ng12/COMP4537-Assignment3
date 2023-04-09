@@ -31,13 +31,17 @@ function Report({id, accessToken, setAccessToken, refreshToken }) {
         const currentTime = Date.now() / 1000;
         if(decoded.exp < currentTime){
             console.log("Token expired!");
+            localStorage.setItem("accessToken", "")
             const res = await axios.post("http://localhost:5000/requestNewAccessToken", {}, {
                 headers: {
                   'auth-token-refresh': refreshToken
                 }
               });
-            setAccessToken(res.headers["auth-token-access"]);
-            config.headers["auth-token-access"] = res.headers["auth-token-access"];
+            localStorage.setItem("accessToken", res.headers["auth-token-access"])
+            setAccessToken(localStorage.getItem("accessToken"));
+            config.headers["auth-token-access"] = localStorage.getItem("accessToken")
+            // setAccessToken(res.headers["auth-token-access"]);
+            // config.headers["auth-token-access"] = res.headers["auth-token-access"];
         }
         return config;
     }, function (error) {
@@ -155,7 +159,7 @@ function Report({id, accessToken, setAccessToken, refreshToken }) {
                     <table id='top-api-users-table' className="rowNumbers">
                         <thead>
                             <tr>
-                                <th colSpan="5">Top API Users Over Period Of Time (2023)</th>
+                                <th colSpan="6">Top API Users Over Period Of Time (2023)</th>
                             </tr>
                         </thead>
                         <tbody>

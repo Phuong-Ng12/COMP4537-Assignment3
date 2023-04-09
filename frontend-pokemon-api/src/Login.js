@@ -19,19 +19,37 @@ function Login({onFormSwitch}) {
 
     const onClickHandle = async (e) => {
         e.preventDefault()
-        const res = await axios.post('http://localhost:5000/login', {
-            username: username,
-            password: password
-        })
-        setUser(res.data)
-        setAccessToken(res.headers["auth-token-access"])
-        setRefreshToken(res.headers["auth-token-refresh"])
-    }
+        try {
+            const res = await axios.post('http://localhost:5000/login', {
+                username: username,
+                password: password
+            })
+            localStorage.setItem("accessToken", res.headers["auth-token-access"])
+            localStorage.setItem("refreshToken", res.headers["auth-token-refresh"])
+            localStorage.setItem("userRole", res.data.role)
+            localStorage.setItem("username", username)
 
+            // setUser(JSON.parse(localStorage.getItem("user")))
+            setAccessToken(localStorage.getItem("accessToken"))
+            setRefreshToken(localStorage.getItem("refreshToken"))
+            setUsername(localStorage.getItem("username"))
+
+            setUser(res.data)
+            // setAccessToken(res.headers["auth-token-access"])
+            // setRefreshToken(res.headers["auth-token-refresh"])
+        } catch (err) {
+            if (err.response.status === 401) {
+                alert(err.response.data.error)
+            } else {
+                alert(err.response.data.error)
+            }
+        }
+        
+    }
   return (
     <>
         {
-            (accessToken) && 
+            ((localStorage.getItem("accessToken") !== null)) && 
                 <>
                     <Navbar
                         accessToken={accessToken}
@@ -41,7 +59,7 @@ function Login({onFormSwitch}) {
                         setUsername={setUsername}
                         setPassword={setPassword}
                     /> 
-                    <h2>Hello {username}</h2>
+                    <h2>Hello {localStorage.getItem("username")}</h2>
                     <Search
                     typeSelectedArray={typeSelectedArray}
                     setTypeSelectedArray={setTypeSelectedArray}
@@ -62,18 +80,19 @@ function Login({onFormSwitch}) {
         }
 
         {
-            (accessToken && user?.role === "admin") &&
+            ((localStorage.getItem("accessToken") !== null) && localStorage.getItem("userRole") === "admin") &&
             <div className="admin-dashboard">
                 <Dashboard
                     accessToken={accessToken}
                     setAccessToken={setAccessToken}
                     refreshToken={refreshToken}
+                    setRefreshToken={setRefreshToken}
                 />
             </div>
         }
 
         {
-            (!accessToken) && 
+            (!accessToken && (localStorage.getItem("accessToken") === null)) && 
             <div className='auth-form-outer-container'>
                 <div className='auth-form'>
                     <div className='auth-form-container'>
@@ -84,11 +103,13 @@ function Login({onFormSwitch}) {
                         <input 
                         type="text" 
                         placeholder='username' 
+                        required="required"
                         onChange={(e) => { setUsername(e.target.value)}}/>
                         <label>Password</label>
                         <input 
                         type="password" 
                         placeholder='password'
+                        required="required"
                         onChange={(e) => { setPassword(e.target.value)}}/>
                         <button type='submit'>Login</button>
                         </form>
