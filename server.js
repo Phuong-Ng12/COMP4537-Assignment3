@@ -32,7 +32,7 @@ var pokeModel = null;
 
 app.use(express.static(path.join(__dirname, "./frontend-pokemon-api/build")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "./frontend-pokemon-api/build"));
+  res.sendFile(path.join(__dirname, "./frontend-pokemon-api/build/index.html"));
 })
 
 const start = asyncWrapper(async () => {
