@@ -75,7 +75,7 @@ function Report({id, accessToken, setAccessToken, refreshToken }) {
                     <table id="unique-api-users-table" className="rowNumbers">
                         <thead>
                             <tr>
-                                <th colSpan="4">Unique API Users Over Period Of Time (2023)</th>
+                                <th colSpan="5">Unique API Users Over Period Of Time (2023)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -84,17 +84,59 @@ function Report({id, accessToken, setAccessToken, refreshToken }) {
                                 <th>Email</th>
                                 <th>Role</th>
                                 <th>Date</th>
+                                <th>Times Visit</th>
                             </tr>
                             {reportTable.map((user, key) => (
                                 <tr key={key}>
-                                    <td>{user.name}</td>
+                                    <td>{user.user}</td>
                                     <td>{user.email}</td>
                                     <td>{user.role}</td>
                                     <td>{user.date}</td>
+                                    <td>{user.count}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+                    <Bar data={{
+                        labels: reportTable.map(user => user.user),
+                        datasets: [
+                            {
+                                label: "Unique API Users Over Period Of Time (2023)",
+                                data: reportTable.map(user => user.count),
+                                backgroundColor: "rgba(255, 99, 132)"
+                            }
+                        ],
+                    }}
+                    options={{
+                        scales: {
+                            y: 
+                              {
+                                ticks: {
+                                  color: "white",
+                                  stepSize: 1,
+                                  beginAtZero: true,
+                                },
+                              },
+                            x: 
+                              {
+                                ticks: {
+                                  color: "white",
+                                  beginAtZero: true,
+                                },
+                              },
+                            
+                          },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                labels: {
+                                    color: 'white'
+                                }
+                            },
+                        },
+                        
+                    }}
+                    />
                     </>
                 }
                 </div> 
@@ -113,7 +155,7 @@ function Report({id, accessToken, setAccessToken, refreshToken }) {
                     <table id='top-api-users-table' className="rowNumbers">
                         <thead>
                             <tr>
-                                <th colSpan="6">Top API Users Over Period Of Time (2023)</th>
+                                <th colSpan="5">Top API Users Over Period Of Time (2023)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -127,7 +169,7 @@ function Report({id, accessToken, setAccessToken, refreshToken }) {
                             </tr>
                             {reportTable.map((user, key) => (
                                 <tr key={key}>
-                                    <td>{user.name}</td>
+                                    <td>{user.username}</td>
                                     <td>{user.email}</td>
                                     <td>{user.role}</td>
                                     <td>{user.date}</td>

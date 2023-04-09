@@ -8,7 +8,7 @@ import {
     Link
   } from "react-router-dom";
 
-function Navbar({ accessToken, setAccessToken }) {
+function Navbar({ accessToken, setAccessToken, refreshToken, setRefreshToken, setUser, setUsername, setPassword }) {
   return (
     <div id="topnav">
         <ul>
@@ -19,7 +19,7 @@ function Navbar({ accessToken, setAccessToken }) {
         </ul>
 
         <Routes>
-            <Route path="/logout" element={<Logout accessToken={accessToken} setAccessToken={setAccessToken} />} />
+            <Route path="/logout" element={<Logout accessToken={accessToken} setAccessToken={setAccessToken} refreshToken={refreshToken} setRefreshToken={setRefreshToken} setUser={setUser} setUsername={setUsername} setPassword={setPassword}/>} />
         </Routes>
     </div>
   )

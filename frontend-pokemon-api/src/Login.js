@@ -36,6 +36,10 @@ function Login({onFormSwitch}) {
                     <Navbar
                         accessToken={accessToken}
                         setAccessToken={setAccessToken}
+                        setRefreshToken={setRefreshToken}
+                        setUser={setUser}
+                        setUsername={setUsername}
+                        setPassword={setPassword}
                     /> 
                     <h2>Hello {username}</h2>
                     <Search
@@ -73,6 +77,7 @@ function Login({onFormSwitch}) {
             <div className='auth-form-outer-container'>
                 <div className='auth-form'>
                     <div className='auth-form-container'>
+                        <h1>POKEDEX</h1>
                         <h2>Login</h2>
                         <form className='login-form' onSubmit={onClickHandle}>
                         <label>Username</label>

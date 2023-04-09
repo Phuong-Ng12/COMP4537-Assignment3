@@ -1,7 +1,7 @@
 import axios from 'axios'
 import React, { useEffect } from 'react'
 
-function Logout({ accessToken, setAccessToken }) {
+function Logout({ accessToken, setAccessToken, setRefreshToken, setUser, setUsername, setPassword }) {
     useEffect(() => {
         async function fetchLogout() {
             const res = await axios.get(
@@ -12,10 +12,22 @@ function Logout({ accessToken, setAccessToken }) {
                     }
                 }
                 )
-            setAccessToken(res.headers["auth-token-access"])
+
+            console.log(res)
+            console.log(res.headers["auth-token-access"])
+
+            setAccessToken('')
+            setRefreshToken('')
+            setUser('')
+            setUsername('')
+            setPassword('')
         }
         fetchLogout()
-    }, [accessToken, setAccessToken])
+    }, [accessToken, setAccessToken, setRefreshToken, setUser, setUsername, setPassword])
+
+    // useEffect(() => {
+    //     console.log(accessToken)
+    // }, [accessToken, setAccessToken])
   return (
     <div>Logout</div>
   )

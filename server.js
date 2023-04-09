@@ -12,13 +12,6 @@ const morgan = require("morgan")
 const cors = require("cors")
 const bodyParser = require('body-parser')
 const jwt_decode = require('jwt-decode');
-// const requestLog = require('./logger.js');
-
-// const winston = require('winston');
-// require('winston-mongodb');
-// var mongoMorgan = require('mongo-morgan')
-// const morganMongoMiddleware = require('morgan-mongo');
-// var mongooseMorgan = require('mongoose-morgan');
 
 var userId = new mongoose.Types.ObjectId(1)
 
@@ -47,9 +40,11 @@ const start = asyncWrapper(async () => {
       throw new PokemonDbError(err)
     else
       console.log(`Phew! Server is running on port: ${process.env.pokeServerPORT}`);
-    const doc = await userModel.findOne({ "username": "admin" })
-    if (!doc)
+    const doc_admin = await userModel.findOne({ "username": "admin" })
+    // const doc_user = await userModel.findOne({ "username": "rose" })
+    if (!doc_admin)
       userModel.create({ username: "admin", password: bcrypt.hashSync("admin", 10), role: "admin", email: "admin@admin.ca" })
+      //userModel.create({ username: "rose", password: bcrypt.hashSync("rose", 10), role: "user", email: "rose@bcit.ca" })
   })
 })
 start()
@@ -113,6 +108,7 @@ app.use(cors({
 
 const bcrypt = require("bcrypt")
 app.post('/register', asyncWrapper(async (req, res) => {
+    // userId = null;
     const username = req.body.username;
     const password = req.body.password;
     const email = req.body.email;
@@ -125,6 +121,8 @@ app.post('/register', asyncWrapper(async (req, res) => {
     const userWithHashedPassword = { ...req.body, password: hashedPassword }
   
     const user = await userModel.create(userWithHashedPassword)
+    userId = await userModel.findOne({ "username": username }).select('_id')
+
     res.status(201).send(user)
 }))
 
@@ -132,6 +130,11 @@ let refreshTokens = []
 app.post('/requestNewAccessToken', asyncWrapper(async (req, res) => {
   // console.log(req.headers);
   const refreshToken = req.header('auth-token-refresh')
+  var decoded = jwt_decode(req.header('auth-token-refresh'))
+  var username = decoded.user.username;
+  userId = await userModel.findOne({ "username": username }).select('_id')
+  console.log(username)
+
   if (!refreshToken) {
     throw new PokemonAuthError("No Token: Please provide a token.")
   }
@@ -153,15 +156,18 @@ app.post('/requestNewAccessToken', asyncWrapper(async (req, res) => {
 app.post('/login', asyncWrapper(async (req, res) => {
   const { username, password } = req.body
   const user = await userModel.findOne({ username })
-  userId = await userModel.findOne({ "username": req.body.username }).select('_id')
-  if (!user)
+  
+  if (!user) {
+    // res.send("User not found. Please register.")
     throw new PokemonAuthError("User not found")
+  }
 
   const isPasswordCorrect = await bcrypt.compare(password, user.password)
-  if (!isPasswordCorrect)
+  if (!isPasswordCorrect) {
+    // res.send("Password is incorrect. Please log in again.")
     throw new PokemonAuthError("Password is incorrect")
-
-
+  }
+  userId = await userModel.findOne({ "username": username }).select('_id')
   const accessToken = jwt.sign({ user: user }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10s' })
   const refreshToken = jwt.sign({ user: user }, process.env.REFRESH_TOKEN_SECRET)
   refreshTokens.push(refreshToken)
@@ -175,12 +181,22 @@ app.post('/login', asyncWrapper(async (req, res) => {
 
 
 app.get('/logout', asyncWrapper(async (req, res) => {
-  var decoded = jwt_decode(req.header('auth-token-access'))
-  var username = decoded.user.username;
-  const user = await userModel.findOne({ username })
-  if (!user) {
-    throw new PokemonAuthError("User not found")
+  // userId = await userModel.findOne({ "username": username }).select('_id')
+  // userId = null;
+  const accessToken = req.header('auth-token-access');
+  if (!accessToken) {
+    throw new PokemonAuthError('No access token provided');
   }
+  const index = refreshTokens.indexOf(accessToken);
+  if (index !== -1) {
+    refreshTokens.splice(index, 1);
+  }
+  // var decoded = jwt_decode(req.header('auth-token-access'))
+  // var username = decoded.user.username;
+  // const user = await userModel.findOne({ username })
+  // if (!user) {
+  //   throw new PokemonAuthError("User not found")
+  // }
   res.header('auth-token-access', "")
   res.send("Logged out")
 }))
@@ -309,6 +325,9 @@ app.patch('/api/v1/pokemon/:id', asyncWrapper(async (req, res) => {
 
 app.get('/report', async (req, res) => {
   console.log("Report requested");
+  var decoded = jwt_decode(req.header('auth-token-access'))
+  var username = decoded.user.username;
+  userId = await userModel.findOne({ "username": username }).select('_id')
 
   if(req.query.id === "1"){
     //Unique API users over a period of time
@@ -316,87 +335,127 @@ app.get('/report', async (req, res) => {
       {
         $match: {
           date: {
-            $gte: new Date('2023-01-01'),
-            $lt: new Date('2023-12-31')
+            $gte: new Date("2023-01-01T00:00:00Z"),
+            $lt: new Date("2023-12-31T23:59:59Z")
           }
         }
       },
       {
-        $group: {
-          _id: '$userId',
+        $lookup: {
+          from: "pokeusers",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user"
         }
       },
       {
-        $lookup: {
-          from: 'pokeusers',
-          localField: 'userId',
-          foreignField: 'userId',
-          as: 'user',
-        },
+        $group: {
+          _id: "$userId",
+          user: {
+            $first: "$user.username"
+          },
+          email: {
+            $first: "$user.email"
+          },
+          role: {
+            $first: "$user.role"
+          },
+          date: {
+            $first: "$user.date"
+          },
+          count: {
+            $sum: 1
+          },
+        }
       },
       {
-        $unwind: '$user',
-      },
-      {
-        $project: {
-          name: '$user.username',
-          email: '$user.email',
-          role: '$user.role',
-          date: '$user.date',
-        },
-      },
+        $sort: {
+          count: -1
+        }
+      }
     ])
     // console.log("=========\n" + JSON.stringify(UniqueAPIUsersOverPeriodOfTime) + "\n=======\n")
-    // console.log(UniqueAPIUsersOverPeriodOfTime)
+    console.log(UniqueAPIUsersOverPeriodOfTime)
     res.send(UniqueAPIUsersOverPeriodOfTime)
   } else if(req.query.id === "2"){
     //Top API users over period of time:
-    var TopAPIUsersOverPeriodOfTime = await Logger.aggregate([
+    var TopAPIUsersOverPeriodOfTime;
+    Logger.aggregate([
       {
         $match: {
           date: {
-            $gte: new Date('2023-01-01'),
-            $lt: new Date('2023-12-31')
+            $gte: new Date("2023-01-01T00:00:00Z"),
+            $lt: new Date("2023-12-31T23:59:59Z")
           }
         }
       },
       {
         $group: {
-          _id: { userId: '$userId', url: '$url'},
-          count: { $sum: 1}
+          _id: {
+            userId: "$userId",
+            url: "$url",
+            date: {
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: "$date"
+              }
+            }
+          },
+          count: {
+            $sum: 1
+          }
         }
       },
       {
-        $lookup: {
-          from: 'pokeusers',
-          localField: 'userId',
-          foreignField: 'userId',
-          as: 'user',
-        },
+        $sort: {
+          "_id.userId": 1,
+          "_id.date": 1,
+          count: -1
+        }
       },
       {
-        $unwind: '$user',
+        $group: {
+          _id: "$_id.userId",
+          urls: {
+            $push: {
+              url: "$_id.url",
+              date: "$_id.date",
+              count: "$count"
+            }
+          },
+          total: {
+            $sum: "$count"
+          }
+        }
       },
       {
-        $sort: { count: -1 },
+        $sort: {
+          total: -1
+        }
       },
       {
-        $limit: 10,
-      },
-      {
-        $project: {
-          name: '$user.username',
-          email: '$user.email',
-          url: '$_id.url',
-          role: '$user.role',
-          date: '$user.date',
-          count: 1,
-        },
-      },
-    ])
-    // console.log("=========\n" + JSON.stringify(TopAPIUsersOverPeriodOfTime) + "\n=======\n")
-    // console.log(TopAPIUsersOverPeriodOfTime)
-    res.send(TopAPIUsersOverPeriodOfTime)
+        $limit: 10
+      }
+    ]) 
+      .then(async (logs) => {
+        // Find users from PokeUser collection
+        const users = await userModel.find({ _id: { $in: logs.map((log) => log._id) } }).select('username email role');
+        TopAPIUsersOverPeriodOfTime = logs.map((log) => {
+          const user = users.find((u) => u._id.equals(log._id));
+          return {
+            username: user.username,
+            email: user.email,
+            role: user.role,
+            urls: log.urls,
+          };
+        });
+        console.log(JSON.stringify(TopAPIUsersOverPeriodOfTime));
+        var outputTopAPIUsersOverPeriodOfTime = [];
+        outputTopAPIUsersOverPeriodOfTime = TopAPIUsersOverPeriodOfTime.flatMap(({ username, email, role, urls }) =>
+        urls.map(({ url, date, count }) => ({ username, email, role, url, date, count })));
+        console.log(outputTopAPIUsersOverPeriodOfTime)
+        res.send(outputTopAPIUsersOverPeriodOfTime)
+      })
   } else if(req.query.id === "3"){
     var TopUsersByEndpointTable = await Logger.aggregate([
       {
@@ -425,30 +484,43 @@ app.get('/report', async (req, res) => {
     })
     // console.log("=========\n" + JSON.stringify(TopUsersByEndpointTable) + "\n===========\n")
 
-    const parsedInput = JSON.parse(JSON.stringify(TopUsersByEndpointTable));
+    // const parsedInput = JSON.parse(JSON.stringify(TopUsersByEndpointTable));
 
-    // Extract the necessary data and convert to the desired format
-    const outputTopUsersByEndpointTable = parsedInput.map(report => {
-      const count = report.topUsers[0].count;
-      const { username, email, role } = report.tpUsers[0];
+    // // Extract the necessary data and convert to the desired format
+    // const outputTopUsersByEndpointTable = parsedInput.map(report => {
+    //   const count = report.topUsers[0].count;
+    //   const { username, email, role } = report.tpUsers[0];
+    //   return {
+    //     _idReport: report._id,
+    //     count,
+    //     username,
+    //     email,
+    //     role
+    //   };
+    // });
+
+    const outputTopUsersByEndpointTable = TopUsersByEndpointTable.map((data) => {
       return {
-        _idReport: report._id,
-        count,
-        username,
-        email,
-        role
+        _idReport: data._id,
+        count: data.topUsers[0].count,
+        username: data.tpUsers[0].username,
+        email: data.tpUsers[0].email,
+        role: data.tpUsers[0].role
       };
     });
 
     // // Convert the output to JSON string
-    const jsonString = JSON.stringify(outputTopUsersByEndpointTable);
+    // const jsonString = JSON.stringify(outputTopUsersByEndpointTable);
 
     // console.log("000000000000\n"+ jsonString + "\n00000000000000\n");
-    // console.log(outputTopUsersByEndpointTable)
+    console.log("000000000000\n")
+    console.log(outputTopUsersByEndpointTable)
+    console.log("000000000000\n")
+
     res.send(outputTopUsersByEndpointTable)
   } else if(req.query.id === "4"){
     var Errors4xxByEnpointTable = await Logger.aggregate([
-      {$match: {status: { $gte: 200, $lt: 500}}},
+      {$match: {status: { $gte: 400, $lt: 500}}},
       {$group: {_id: {'url': '$url', 'method': '$method', 'status': '$status'},count: { $sum: 1 }}}
     ])
     const outputErrors4xxByEnpointTable = Errors4xxByEnpointTable.map(({ _id, count }) => ({
@@ -461,7 +533,7 @@ app.get('/report', async (req, res) => {
     res.send(outputErrors4xxByEnpointTable)
   } else if(req.query.id === "5"){
     var RecentErrorsTable = await Logger.find({
-      status: { $gte: 200},
+      status: { $gte: 400},
       date: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000)}
     }).sort({ date: -1});
     const outputRecentErrorsTable = RecentErrorsTable.map(({ method, url, status, responseTime, date}) => ({
@@ -471,7 +543,6 @@ app.get('/report', async (req, res) => {
       responseTime,
       date
     }));
-
     //console.log(outputRecentErrorsTable);
     res.send(outputRecentErrorsTable)
   }
