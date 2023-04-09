@@ -127,19 +127,15 @@ app.post('/register', asyncWrapper(async (req, res) => {
 
 let refreshTokens = []
 app.post('/requestNewAccessToken', asyncWrapper(async (req, res) => {
-  // console.log(req.headers);
   const refreshToken = req.header('auth-token-refresh')
   var decoded = jwt_decode(req.header('auth-token-refresh'))
   var username = decoded.user.username;
   userId = await userModel.findOne({ "username": username }).select('_id')
-  console.log(username)
 
   if (!refreshToken) {
     throw new PokemonAuthError("No Token: Please provide a token.")
   }
   if (!refreshTokens.includes(refreshToken)) { 
-    console.log("token: ", refreshToken);
-    console.log("refreshTokens", refreshTokens);
     throw new PokemonAuthError("Invalid Token: Please provide a valid token.")
   }
   try {
@@ -256,7 +252,6 @@ app.get('/api/v1/pokemon', asyncWrapper(async (req, res) => {
 app.use(authAdmin)
 app.post('/api/v1/pokemon/', asyncWrapper(async (req, res) => {
   // try {
-  console.log(req.body);
   if (!req.body.id) throw new PokemonBadRequestMissingID()
   const poke = await pokeModel.find({ "id": req.body.id })
   if (poke.length != 0) throw new PokemonDuplicateError()
@@ -290,7 +285,6 @@ app.put('/api/v1/pokemon/:id', asyncWrapper(async (req, res) => {
     overwrite: true
   }
   const doc = await pokeModel.findOneAndUpdate(selection, update, options)
-  // console.log(docs);
   if (doc) {
     res.json({
       msg: "Updated Successfully",
@@ -377,8 +371,6 @@ app.get('/report', async (req, res) => {
         }
       }
     ])
-    // console.log("=========\n" + JSON.stringify(UniqueAPIUsersOverPeriodOfTime) + "\n=======\n")
-    console.log(UniqueAPIUsersOverPeriodOfTime)
     res.send(UniqueAPIUsersOverPeriodOfTime)
   } else if(req.query.id === "2"){
     //Top API users over period of time:
@@ -452,11 +444,9 @@ app.get('/report', async (req, res) => {
             urls: log.urls,
           };
         });
-        console.log(JSON.stringify(TopAPIUsersOverPeriodOfTime));
         var outputTopAPIUsersOverPeriodOfTime = [];
         outputTopAPIUsersOverPeriodOfTime = TopAPIUsersOverPeriodOfTime.flatMap(({ username, email, role, urls }) =>
         urls.map(({ url, date, count }) => ({ username, email, role, url, date, count })));
-        console.log(outputTopAPIUsersOverPeriodOfTime)
         res.send(outputTopAPIUsersOverPeriodOfTime)
       })
   } else if(req.query.id === "3"){
@@ -495,15 +485,6 @@ app.get('/report', async (req, res) => {
         role: data.tpUsers[0].role
       };
     });
-
-    // // Convert the output to JSON string
-    // const jsonString = JSON.stringify(outputTopUsersByEndpointTable);
-
-    // console.log("000000000000\n"+ jsonString + "\n00000000000000\n");
-    console.log("000000000000\n")
-    console.log(outputTopUsersByEndpointTable)
-    console.log("000000000000\n")
-
     res.send(outputTopUsersByEndpointTable)
   } else if(req.query.id === "4"){
     var Errors4xxByEnpointTable = await Logger.aggregate([
@@ -516,7 +497,6 @@ app.get('/report', async (req, res) => {
       status: _id.status,
       countEndpoint: count
     }));
-    // console.log(outputErrors4xxByEnpointTable)
     res.send(outputErrors4xxByEnpointTable)
   } else if(req.query.id === "5"){
     var RecentErrorsTable = await Logger.find({
@@ -530,11 +510,10 @@ app.get('/report', async (req, res) => {
       responseTime,
       date
     }));
-    //console.log(outputRecentErrorsTable);
     res.send(outputRecentErrorsTable)
+  } else {
+    res.send(`Table ${req.query.id} has not been queried yet`)
   }
-
-  //res.send(`Table ${req.query.id}`+ JSON.stringify(UniqueAPIUsersOverPeriodOfTime))
 })
 
 

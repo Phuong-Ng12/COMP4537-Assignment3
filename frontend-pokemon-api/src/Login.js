@@ -28,15 +28,10 @@ function Login({onFormSwitch}) {
             localStorage.setItem("refreshToken", res.headers["auth-token-refresh"])
             localStorage.setItem("userRole", res.data.role)
             localStorage.setItem("username", username)
-
-            // setUser(JSON.parse(localStorage.getItem("user")))
             setAccessToken(localStorage.getItem("accessToken"))
             setRefreshToken(localStorage.getItem("refreshToken"))
             setUsername(localStorage.getItem("username"))
-
             setUser(res.data)
-            // setAccessToken(res.headers["auth-token-access"])
-            // setRefreshToken(res.headers["auth-token-refresh"])
         } catch (err) {
             if (err.response.status === 401) {
                 alert(err.response.data.error)

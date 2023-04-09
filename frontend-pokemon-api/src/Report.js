@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react'
 import axios from 'axios'
-import { useState } from 'react'
 import jwt_decode from 'jwt-decode'
 import {
     Chart as ChartJS,
@@ -40,8 +39,6 @@ function Report({id, accessToken, setAccessToken, refreshToken }) {
             localStorage.setItem("accessToken", res.headers["auth-token-access"])
             setAccessToken(localStorage.getItem("accessToken"));
             config.headers["auth-token-access"] = localStorage.getItem("accessToken")
-            // setAccessToken(res.headers["auth-token-access"]);
-            // config.headers["auth-token-access"] = res.headers["auth-token-access"];
         }
         return config;
     }, function (error) {
@@ -58,9 +55,7 @@ function Report({id, accessToken, setAccessToken, refreshToken }) {
                     }
                 }
                 );
-                // console.log(res.data);
             setReportTable(res.data);
-            // console.log(reportTable);
         }
         fetchReport();
     }, [id])
@@ -422,7 +417,7 @@ function Report({id, accessToken, setAccessToken, refreshToken }) {
                         </tbody>
                     </table>
                     <Bar data={{
-                            labels: reportTable.map(error => error.method),
+                            labels: reportTable.map(error => error.date),
                             datasets: [
                                 {
                                     label: "Recent 4xx/5xx Errors",
