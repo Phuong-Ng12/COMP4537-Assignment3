@@ -31,7 +31,7 @@ function Report({id, accessToken, setAccessToken, refreshToken }) {
         if(decoded.exp < currentTime){
             console.log("Token expired!");
             localStorage.setItem("accessToken", "")
-            const res = await axios.post("http://localhost:5000/requestNewAccessToken", {}, {
+            const res = await axios.post("https://pokedex-server-rosebug.onrender.com/requestNewAccessToken", {}, {
                 headers: {
                   'auth-token-refresh': refreshToken
                 }
@@ -48,7 +48,7 @@ function Report({id, accessToken, setAccessToken, refreshToken }) {
     useEffect(() => {
         async function fetchReport() {
             const res = await axiosToBeIntercepted.get(
-                `http://localhost:5000/report?id=${id}`,
+                `https://pokedex-server-rosebug.onrender.com/report?id=${id}`,
                 {
                     headers: {
                         'auth-token-access': accessToken

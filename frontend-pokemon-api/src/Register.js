@@ -10,7 +10,7 @@ function Register({onFormSwitch}) {
 
     const onClickHandle = async (e) => {
         e.preventDefault()
-        const res = await axios.post('http://localhost:5000/register', {
+        const res = await axios.post('https://pokedex-server-rosebug.onrender.com/register', {
             username: username,
             password: password,
             email: email

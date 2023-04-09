@@ -5,7 +5,7 @@ function Logout({ accessToken, setAccessToken, setRefreshToken, setUser, setUser
     useEffect(() => {
         async function fetchLogout() {
             const res = await axios.get(
-                "http://localhost:5000/logout",
+                "https://pokedex-server-rosebug.onrender.com/logout",
                 {
                     headers: {
                         'auth-token-access': accessToken
