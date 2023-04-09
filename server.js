@@ -188,12 +188,6 @@ app.get('/logout', asyncWrapper(async (req, res) => {
   if (index !== -1) {
     refreshTokens.splice(index, 1);
   }
-  // var decoded = jwt_decode(req.header('auth-token-access'))
-  // var username = decoded.user.username;
-  // const user = await userModel.findOne({ username })
-  // if (!user) {
-  //   throw new PokemonAuthError("User not found")
-  // }
   res.header('auth-token-access', "")
   res.send("Logged out")
 }))
