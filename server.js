@@ -12,7 +12,6 @@ const morgan = require("morgan")
 const cors = require("cors")
 const bodyParser = require('body-parser')
 const jwt_decode = require('jwt-decode');
-const path = require('path');
 
 var userId = new mongoose.Types.ObjectId(1)
 
@@ -30,11 +29,6 @@ const {
 const app = express()
 var pokeModel = null;
 
-app.use(express.static(path.join(__dirname, "./frontend-pokemon-api/build")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "./frontend-pokemon-api/build/index.html"));
-})
-
 const start = asyncWrapper(async () => {
   await connectDB({ "drop": true });
   const pokeSchema = await getTypes();
@@ -47,10 +41,8 @@ const start = asyncWrapper(async () => {
     else
       console.log(`Phew! Server is running on port: ${process.env.pokeServerPORT}`);
     const doc_admin = await userModel.findOne({ "username": "admin" })
-    // const doc_user = await userModel.findOne({ "username": "rose" })
     if (!doc_admin)
       userModel.create({ username: "admin", password: bcrypt.hashSync("admin", 10), role: "admin", email: "admin@admin.ca" })
-      //userModel.create({ username: "rose", password: bcrypt.hashSync("rose", 10), role: "user", email: "rose@bcit.ca" })
   })
 })
 start()
