@@ -12,6 +12,7 @@ const morgan = require("morgan")
 const cors = require("cors")
 const bodyParser = require('body-parser')
 const jwt_decode = require('jwt-decode');
+const path = require('path');
 
 var userId = new mongoose.Types.ObjectId(1)
 
@@ -28,6 +29,11 @@ const {
 
 const app = express()
 var pokeModel = null;
+
+app.use(express.static(path.join(__dirname, "./frontend-pokemon-api/build")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "./frontend-pokemon-api/build"));
+})
 
 const start = asyncWrapper(async () => {
   await connectDB({ "drop": true });
