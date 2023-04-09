@@ -156,7 +156,6 @@ app.post('/login', asyncWrapper(async (req, res) => {
 
   const isPasswordCorrect = await bcrypt.compare(password, user.password)
   if (!isPasswordCorrect) {
-    // res.send("Password is incorrect. Please log in again.")
     throw new PokemonAuthError("Password is incorrect")
   }
   userId = await userModel.findOne({ "username": username }).select('_id')
@@ -167,7 +166,6 @@ app.post('/login', asyncWrapper(async (req, res) => {
   res.header('auth-token-access', accessToken)
   res.header('auth-token-refresh', refreshToken)
 
-  // res.send("All good!")
   res.send(user)
 }))
 app.use((err, req, res, next) => {
@@ -178,8 +176,6 @@ app.use((err, req, res, next) => {
 })
 
 app.get('/logout', asyncWrapper(async (req, res) => {
-  // userId = await userModel.findOne({ "username": username }).select('_id')
-  // userId = null;
   const accessToken = req.header('auth-token-access');
   if (!accessToken) {
     throw new PokemonAuthError('No access token provided');
@@ -234,16 +230,9 @@ app.get('/api/v1/pokemon', asyncWrapper(async (req, res) => {
   else res.json({ errMsg: "Pokemon not found" })
 }))
 
-// app.get("*", (req, res) => {
-//   // res.json({
-//   //   msg: "Improper route. Check API docs plz."
-//   // })
-//   throw new PokemonNoSuchRouteError("");
-// })
-
 app.use(authAdmin)
 app.post('/api/v1/pokemon/', asyncWrapper(async (req, res) => {
-  // try {
+  try {
   if (!req.body.id) throw new PokemonBadRequestMissingID()
   const poke = await pokeModel.find({ "id": req.body.id })
   if (poke.length != 0) throw new PokemonDuplicateError()
@@ -251,24 +240,24 @@ app.post('/api/v1/pokemon/', asyncWrapper(async (req, res) => {
   res.json({
     msg: "Added Successfully"
   })
-  // } catch (err) { res.json(handleErr(err)) }
+  } catch (err) { res.json(handleErr(err)) }
 }))
 
 app.delete('/api/v1/pokemon', asyncWrapper(async (req, res) => {
-  // try {
+  try {
   const docs = await pokeModel.findOneAndRemove({ id: req.query.id })
   if (docs)
     res.json({
       msg: "Deleted Successfully"
     })
   else
-    // res.json({ errMsg: "Pokemon not found" })
+    res.json({ errMsg: "Pokemon not found" })
     throw new PokemonNotFoundError("");
-  // } catch (err) { res.json(handleErr(err)) }
+  } catch (err) { res.json(handleErr(err)) }
 }))
 
 app.put('/api/v1/pokemon/:id', asyncWrapper(async (req, res) => {
-  // try {
+  try {
   const selection = { id: req.params.id }
   const update = req.body
   const options = {
@@ -283,14 +272,14 @@ app.put('/api/v1/pokemon/:id', asyncWrapper(async (req, res) => {
       pokeInfo: doc
     })
   } else {
-    // res.json({ msg: "Not found", })
+    res.json({ msg: "Not found", })
     throw new PokemonNotFoundError("");
   }
-  // } catch (err) { res.json(handleErr(err)) }
+  } catch (err) { res.json(handleErr(err)) }
 }))
 
 app.patch('/api/v1/pokemon/:id', asyncWrapper(async (req, res) => {
-  // try {
+  try {
   const selection = { id: req.params.id }
   const update = req.body
   const options = {
@@ -304,10 +293,10 @@ app.patch('/api/v1/pokemon/:id', asyncWrapper(async (req, res) => {
       pokeInfo: doc
     })
   } else {
-    // res.json({  msg: "Not found" })
+    res.json({  msg: "Not found" })
     throw new PokemonNotFoundError("");
   }
-  // } catch (err) { res.json(handleErr(err)) }
+  } catch (err) { res.json(handleErr(err)) }
 }))
 
 
